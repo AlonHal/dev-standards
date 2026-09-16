@@ -1,0 +1,42 @@
+# Copy to the backend repo root as .gitignore
+# Backend language isn't decided yet (see DEVELOPMENT_ENVIRONMENT_STANDARDS.md §12) —
+# this covers both Node and Python as placeholders; delete whichever doesn't apply.
+# See dev-standards/DEVELOPMENT_ENVIRONMENT_STANDARDS.md §10 Phase 0
+
+# Secrets — never commit real values
+.env
+.env.local
+!.env.example
+
+# Node
+node_modules/
+dist/
+.npm/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# Build / test artifacts
+coverage/
+build/
+
+# Docker Compose local overrides (see §6 — gitignored, machine-local only)
+docker-compose.override.yml
+
+# IDE / editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# OS cruft
+.DS_Store
+
+# Worktrees (see dev-standards §3)
+.worktrees/

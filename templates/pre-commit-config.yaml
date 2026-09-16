@@ -1,0 +1,57 @@
+# Copy to a component repo root as .pre-commit-config.yaml, then:
+#   pre-commit install
+#   pre-commit install --hook-type pre-push
+# See dev-standards/DEVELOPMENT_ENVIRONMENT_STANDARDS.md §4, §8, §10 Phase 1
+#
+# Base hooks below apply to every repo. Uncomment the language-specific
+# block that matches this component (Flutter vs backend) once its
+# language is decided.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: mixed-line-ending
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # --- Flutter/Dart repos: uncomment ---
+  # - repo: local
+  #   hooks:
+  #     - id: dart-format
+  #       name: dart format
+  #       entry: dart format --output=none --set-exit-if-changed
+  #       language: system
+  #       types: [dart]
+  #     - id: flutter-analyze
+  #       name: flutter analyze
+  #       entry: flutter analyze
+  #       language: system
+  #       pass_filenames: false
+
+  # --- Backend repos (Node): uncomment ---
+  # - repo: local
+  #   hooks:
+  #     - id: eslint
+  #       name: eslint
+  #       entry: npx eslint --fix
+  #       language: system
+  #       types: [javascript, ts]
+
+  # --- Backend repos (Python): uncomment ---
+  # - repo: https://github.com/psf/black
+  #   rev: 24.10.0
+  #   hooks:
+  #     - id: black
+  # - repo: https://github.com/astral-sh/ruff-pre-commit
+  #   rev: v0.8.4
+  #   hooks:
+  #     - id: ruff

@@ -1,0 +1,25 @@
+# CLAUDE.md
+
+<!--
+Copy to a component repo root as CLAUDE.md, then fill in the bracketed
+sections below. This file is how Claude Code discovers project-specific
+context automatically at the start of a session.
+See dev-standards/DEVELOPMENT_ENVIRONMENT_STANDARDS.md §2, §10 Phase 0
+-->
+
+This repo is part of the SmartphonePracticingApps family. Workspace-wide
+process and tooling rules — git workflow, CI, testing layers, Docker
+Compose environments, AI-agent operating rules, secrets management — live
+in `../dev-standards/DEVELOPMENT_ENVIRONMENT_STANDARDS.md`. Read that
+document for anything not specific to this repo.
+
+## What this component is
+
+[One paragraph: what this app/service does. For DailyDo, point to
+DEVELOPMENT_PLAN.md instead of duplicating it here.]
+
+## Component-specific notes
+
+[Anything that only applies to this repo — build commands, local dev
+setup quirks, non-obvious constraints not already covered by the
+workspace-wide standards doc.]
