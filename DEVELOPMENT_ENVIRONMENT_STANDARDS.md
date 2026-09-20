@@ -145,8 +145,10 @@ Two DailyDo-specific additions, even though they're really product rules from `D
 | Tool | Status | Purpose |
 |---|---|---|
 | `git`, `gh`, `docker`, `docker compose`, `sqlite3` | Already installed | core VCS + container + DB tooling |
-| `pre-commit` | Missing — `apt install pre-commit` | uniform format/lint/secret-scan hooks, driven by the shared template |
-| `gitleaks` | Missing — `apt install gitleaks` | secret scanning, pre-commit + CI |
+| `pre-commit` | **Installed** — in an isolated venv (`~/.venvs/dev-tools`), not system-wide/apt, per the user's preference to keep local installs from interfering with anything else on the box | uniform format/lint/secret-scan hooks, driven by the shared template |
+| `gitleaks` | **Installed** — prebuilt binary (v8.30.1) dropped into `~/.venvs/dev-tools/bin`, not apt (avoids needing a Go toolchain the golang-based pre-commit hook variant would otherwise require) | secret scanning, pre-commit + CI |
+
+Both are reached via `~/.venvs/dev-tools/bin` added to `PATH` in `~/.zshrc`. Nothing was installed with `sudo` or touched system Python/apt packages.
 | `flutter`/`dart`, Android SDK, `adb`, emulator image | Missing — this is DailyDo's own outstanding Phase 0 item | DailyDo build/test/analyze |
 | `/dev/kvm` | Missing on this box | blocks the Android emulator until fixed at the host/hypervisor level — carried forward as an unresolved risk, out of scope for this document to fix |
 | `make` | Already present | the "same commands locally and in CI" mechanism — chosen over Just/Task specifically because it needs zero install |
