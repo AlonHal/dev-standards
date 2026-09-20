@@ -44,9 +44,7 @@ Each component repo gets its own `CLAUDE.md` (built from `templates/CLAUDE.md.te
 - **Commit format**: [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`, `ci:`) across all repos, including DailyDo. This is additive to `DEVELOPMENT_PLAN.md` §10, which only specified the branch model, not commit format.
 - **AI-authored commit provenance**: every commit produced through a Claude Code session gets a `Co-Authored-By: Claude Code <noreply@anthropic.com>` trailer. This *is* the audit trail (`git log --grep`/`--author`) — no separate event-log system needed. Directly answers app-infra.md's "every AI change has provenance" boundary, at solo scale.
 - **Worktree isolation**: for any non-trivial Claude Code task, work in a dedicated git worktree (`.worktrees/<task-slug>/`, gitignored via the shared template) on a branch named `feat|fix|chore/<task-slug>`. This isolates the agent's working directory from whatever the human has open, and keeps each task's diff independently reviewable. It's the practical, single-agent version of app-infra.md's "isolated worktrees for parallel agents." Trivial one-line changes don't need this — don't ritualize it.
-- **Review, with no remote decided yet** (both paths are defined so this reads as future-proof, not throwaway):
-  - **Now (no remote)**: "review" = the human reads `git diff main...<branch>`, runs the local check script (§4), then merges. Enforced by convention and a short checklist, not a GitHub UI object.
-  - **If a GitHub remote is added later**: identical branch/worktree discipline, just pushed and reviewed as a real PR with branch protection on `main` (PR + passing checks required, no direct pushes). A pure upgrade, not a redesign.
+- **Review**: a GitHub remote now exists for both repos (public, `AlonHal/DailyDo` and `AlonHal/dev-standards`), but branch protection isn't on yet — that's gated on Phase 2 having a real CI check to require. Until then: "review" = the human reads `git diff main...<branch>` (locally or as a GitHub PR diff, either works), runs the local check script (§4), then merges. Once Phase 2 lands, this becomes a real PR with branch protection on `main` (PR + passing checks required, no direct pushes) — a pure upgrade, not a redesign.
 - **Merge method**: squash-merge into `main` (recommended, confirm in §12) — keeps `main`'s history one clean commit per feature/fix, while a branch's noisy in-progress commits stay contained there.
 
 **Role mapping**, adapted from app-infra.md's agent-permission table and collapsed to solo scale — the clearest artifact of what was deliberately *not* rebuilt as a multi-agent orchestrator:
@@ -164,7 +162,7 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 - [x] Create `dev-standards/` repo (`git init` here), commit this document + templates
 - [x] `git init` in `DailyDo/` (branch renamed to `main`), add the Flutter `.gitignore` from `templates/gitignore.flutter`, first commit
 - [x] Relocate `app-infra.md` into `dev-standards/reference/`; distill it into `templates/app-infra-template.md` (§12)
-- [ ] Decide: GitHub remote wanted? If yes, `gh auth login`, create repos
+- [x] GitHub remote: yes, public. `DailyDo` → https://github.com/AlonHal/DailyDo, `dev-standards` → https://github.com/AlonHal/dev-standards, both pushed. Branch protection on `main` is still Phase 2 (needs a real CI check to require first).
 
 **Phase 1 — Local process discipline (no CI infra needed yet)**
 - [ ] Install `pre-commit`, `gitleaks`; wire the shared `.pre-commit-config.yaml` into DailyDo
@@ -207,7 +205,7 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 ## 12. Decisions Needed
 
 - [ ] Backend language/runtime (Node and Python are already on this box; no framework chosen)
-- [ ] Whether a GitHub (or other) remote is wanted at all, and if so public/private, one account vs. per-project
+- [x] ~~Whether a GitHub (or other) remote is wanted at all, and if so public/private~~ — resolved: GitHub, public, personal account (AlonHal)
 - [ ] Backend repo naming (app-specific, e.g. `dailydo-backend`, vs. a family-level name if it's meant to serve multiple future apps)
 - [x] ~~Whether to relocate `app-infra.md` out of `DailyDo/` into `dev-standards/reference/`, or leave it in place~~ — resolved: relocated, and distilled into `templates/app-infra-template.md`
 - [ ] Merge strategy confirmation (squash recommended)
