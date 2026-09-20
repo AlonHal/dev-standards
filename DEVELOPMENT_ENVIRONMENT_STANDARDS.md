@@ -167,7 +167,7 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 - [x] GitHub remote: yes, public. `DailyDo` → https://github.com/AlonHal/DailyDo, `dev-standards` → https://github.com/AlonHal/dev-standards, both pushed. Branch protection on `main` is still Phase 2 (needs a real CI check to require first).
 
 **Phase 1 — Local process discipline (no CI infra needed yet)**
-- [ ] Install `pre-commit`, `gitleaks`; wire the shared `.pre-commit-config.yaml` into DailyDo
+- [x] Install `pre-commit`, `gitleaks` (isolated venv, §9); wire the shared `.pre-commit-config.yaml` into DailyDo — hooks verified on a real commit + push
 - [ ] Adopt worktree convention, branch naming, commit convention (Conventional Commits + trailer)
 - [ ] Add DailyDo `Makefile`/`scripts/ci-local.sh` formalizing `DEVELOPMENT_PLAN.md` §7's validation script
 - [x] Install subagent definitions (`implementer`, `test-writer`, `debugger`) from `templates/agents/` into DailyDo's `.claude/agents/`
