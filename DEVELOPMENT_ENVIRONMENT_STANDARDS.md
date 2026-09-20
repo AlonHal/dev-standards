@@ -1,6 +1,6 @@
 # Development Environment Standards — SmartphonePracticingApps
 
-Status: Phase 0 and Phase 1 complete (both repos initialized, pushed to GitHub, hooks/tooling live in DailyDo). Phase 2 (automated CI) in progress. See §10 for the live checklist.
+Status: Phase 0–2 complete for DailyDo (repo live, hooks/tooling wired, CI running, branch protection on). `dev-standards` still needs its own Phase 1/2 (Phase 3+ pick up from there). See §10 for the live checklist.
 
 ## 1. Purpose & Scope
 
@@ -44,8 +44,11 @@ Each component repo gets its own `CLAUDE.md` (built from `templates/CLAUDE.md.te
 - **Commit format**: [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`, `ci:`) across all repos, including DailyDo. This is additive to `DEVELOPMENT_PLAN.md` §10, which only specified the branch model, not commit format.
 - **AI-authored commit provenance**: every commit produced through a Claude Code session gets a `Co-Authored-By: Claude Code <noreply@anthropic.com>` trailer. This *is* the audit trail (`git log --grep`/`--author`) — no separate event-log system needed. Directly answers app-infra.md's "every AI change has provenance" boundary, at solo scale.
 - **Worktree isolation**: for any non-trivial Claude Code task, work in a dedicated git worktree (`.worktrees/<task-slug>/`, gitignored via the shared template) on a branch named `feat|fix|chore/<task-slug>`. This isolates the agent's working directory from whatever the human has open, and keeps each task's diff independently reviewable. It's the practical, single-agent version of app-infra.md's "isolated worktrees for parallel agents." Trivial one-line changes don't need this — don't ritualize it.
-- **Review**: a GitHub remote now exists for both repos (public, `AlonHal/DailyDo` and `AlonHal/dev-standards`), but branch protection isn't on yet — that's gated on Phase 2 having a real CI check to require. Until then: "review" = the human reads `git diff main...<branch>` (locally or as a GitHub PR diff, either works), runs the local check script (§4), then merges. Once Phase 2 lands, this becomes a real PR with branch protection on `main` (PR + passing checks required, no direct pushes) — a pure upgrade, not a redesign.
-- **Merge method**: squash-merge into `main` — one clean commit per feature/fix, branch's noisy in-progress commits stay contained there. Once Phase 2 lands (real GitHub PRs), GitHub's "Squash and merge" button does this server-side and never touches local hooks. **Until then**, merging locally needs care: the `no-commit-to-branch` hook (below) blocks *any* new commit on `main`, including the commit a local squash-merge would create — there's no server-side merge to exempt it. The workaround isn't `--no-verify`; it's to keep a task's branch to a single commit (squash it there first with `git reset --soft main && git commit` if it grew messy) and merge with `git merge --ff-only`, which moves the `main` pointer without creating a new commit object at all, so no hook fires. This only works because the branch is already linear with `main` — if `main` has moved on, rebase the branch first.
+- **Review (DailyDo — live as of Phase 2)**: `main` is now branch-protected server-side — a PR is required (0 approvals needed, solo dev, no one else to approve), the `check` CI run must pass, and force-pushes/deletions on `main` are blocked. `enforce_admins` is deliberately `false`: the repo owner *can* still bypass in a genuine emergency, but that's an escape hatch, not a standing practice. The flow: push a branch, `gh pr create`, wait for CI, `gh pr merge`. Verified end-to-end on DailyDo PR #1.
+  - **`dev-standards` is not protected yet** — no Makefile/CI wired into it (out of Phase 2's scope, same as Phase 1 only wiring pre-commit into DailyDo). Docs there still land via direct commits to `main` for now.
+- **Merge method**: both **squash** and **rebase** merges are enabled on both repos; plain merge commits are disabled repo-wide (`allow_merge_commit: false`) — this was an explicit ask, not just the earlier squash-only default. For a single-commit branch (the norm here) they produce an identical result; squash remains the practical default, rebase is there for a branch with multiple commits worth preserving individually. Both auto-delete the branch on merge.
+  - **Local-only merging** (`git merge --ff-only` after keeping a branch to one commit) was the Phase 0/1 bridge workaround for landing changes on DailyDo's `main` before real PRs existed — server-side branch protection now makes direct pushes to DailyDo's `main` impossible anyway (PR required), so that workaround is moot there going forward; a real PR is now the only path in. It's still the right pattern for `dev-standards`, which has no protection yet.
+  - **Before opening a PR**: run the full local suite (`make check && make test && make build`) and confirm it's green first — don't lean on CI to discover a failure that was catchable for free locally.
 
 **Role mapping**, adapted from app-infra.md's agent-permission table and collapsed to solo scale — the clearest artifact of what was deliberately *not* rebuilt as a multi-agent orchestrator:
 
@@ -146,7 +149,7 @@ Two DailyDo-specific additions, even though they're really product rules from `D
 |---|---|---|
 | `git`, `gh`, `docker`, `docker compose`, `sqlite3` | Already installed | core VCS + container + DB tooling |
 | `pre-commit` | **Installed** — in an isolated venv (`~/.venvs/dev-tools`), not system-wide/apt, per the user's preference to keep local installs from interfering with anything else on the box | uniform format/lint/secret-scan hooks, driven by the shared template |
-| `gitleaks` | **Installed** — prebuilt binary (v8.30.1) dropped into `~/.venvs/dev-tools/bin`, not apt (avoids needing a Go toolchain the golang-based pre-commit hook variant would otherwise require) | secret scanning, pre-commit + CI |
+| `gitleaks` | **Installed** locally — prebuilt binary (v8.30.1) dropped into `~/.venvs/dev-tools/bin`, not apt (avoids needing a Go toolchain the golang-based pre-commit hook variant would otherwise require). **In CI**, the same binary/version is installed fresh per run (`templates/ci-workflow.yml`'s "Install gitleaks" step, via `$GITHUB_PATH`) — the local venv path doesn't exist on a GitHub runner, so this isn't optional. `make check` calls `gitleaks detect --no-git`, not `protect --staged` — staged-diff scanning is meaningless against a clean CI checkout with nothing staged | secret scanning, pre-commit + CI |
 | `flutter`/`dart`, Android SDK, `adb`, emulator image | Missing — this is DailyDo's own outstanding Phase 0 item | DailyDo build/test/analyze |
 | `/dev/kvm` | Missing on this box | blocks the Android emulator until fixed at the host/hypervisor level — carried forward as an unresolved risk, out of scope for this document to fix |
 | `make` | Already present | the "same commands locally and in CI" mechanism — chosen over Just/Task specifically because it needs zero install |
@@ -173,8 +176,10 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 - [x] Install subagent definitions (`implementer`, `test-writer`, `debugger`) from `templates/agents/` into DailyDo's `.claude/agents/`
 
 **Phase 2 — Automated CI**
-- [ ] If remote chosen: `.github/workflows/ci.yml` calling the same Makefile targets; branch protection on `main`
-- [ ] If staying local-only: `pre-push` hook running the full local CI script
+- [x] `.github/workflows/ci.yml` added to DailyDo, calling the same Makefile targets — [PR #1](https://github.com/AlonHal/DailyDo/pull/1), squash-merged after CI passed for real (first attempt actually failed: gitleaks wasn't installed on the runner and `protect --staged` doesn't make sense against a clean checkout — both fixed, see §9)
+- [x] Branch protection on DailyDo's `main`: PR required (0 approvals, solo dev), `check` CI run required, no force-push/deletion, `enforce_admins: false` (owner escape hatch, not standing practice)
+- [x] Merge policy on both repos: squash + rebase enabled, plain merge commits disabled, auto-delete branch on merge (explicit ask, not just the earlier default)
+- [ ] Same CI + branch protection for `dev-standards` — not done, no Makefile/checks exist there yet to require
 
 **Phase 3 — Backend bootstrap** (once backend product features are decided — separate effort)
 - [ ] Write `BACKEND_DEVELOPMENT_PLAN.md` using `DEVELOPMENT_PLAN.md`'s phased-plan pattern as the template
@@ -215,4 +220,4 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 
 ---
 
-**Next step**: Phase 2 — automated CI (§10).
+**Next step**: Phase 3 — backend bootstrap (§10), once backend product features are decided; or retroactively give `dev-standards` its own Phase 1/2.
