@@ -1,6 +1,6 @@
 # Development Environment Standards — SmartphonePracticingApps
 
-Status: Phase 0–2 complete for DailyDo (repo live, hooks/tooling wired, CI running, branch protection on). `dev-standards` still needs its own Phase 1/2 (Phase 3+ pick up from there). See §10 for the live checklist.
+Status: Phase 0–2 complete for DailyDo. `dev-standards` has hooks/Makefile/CI as of this PR — its branch protection is a fast-follow once this CI run passes. See §10 for the live checklist.
 
 ## 1. Purpose & Scope
 
@@ -45,7 +45,7 @@ Each component repo gets its own `CLAUDE.md` (built from `templates/CLAUDE.md.te
 - **AI-authored commit provenance**: every commit produced through a Claude Code session gets a `Co-Authored-By: Claude Code <noreply@anthropic.com>` trailer. This *is* the audit trail (`git log --grep`/`--author`) — no separate event-log system needed. Directly answers app-infra.md's "every AI change has provenance" boundary, at solo scale.
 - **Worktree isolation**: for any non-trivial Claude Code task, work in a dedicated git worktree (`.worktrees/<task-slug>/`, gitignored via the shared template) on a branch named `feat|fix|chore/<task-slug>`. This isolates the agent's working directory from whatever the human has open, and keeps each task's diff independently reviewable. It's the practical, single-agent version of app-infra.md's "isolated worktrees for parallel agents." Trivial one-line changes don't need this — don't ritualize it.
 - **Review (DailyDo — live as of Phase 2)**: `main` is now branch-protected server-side — a PR is required (0 approvals needed, solo dev, no one else to approve), the `check` CI run must pass, and force-pushes/deletions on `main` are blocked. `enforce_admins` is deliberately `false`: the repo owner *can* still bypass in a genuine emergency, but that's an escape hatch, not a standing practice. The flow: push a branch, `gh pr create`, wait for CI, `gh pr merge`. Verified end-to-end on DailyDo PR #1.
-  - **`dev-standards` is not protected yet** — no Makefile/CI wired into it (out of Phase 2's scope, same as Phase 1 only wiring pre-commit into DailyDo). Docs there still land via direct commits to `main` for now.
+  - **`dev-standards`**: getting the same treatment (this PR) — local hooks, its own `Makefile`, and CI. Branch protection follows in a fast-follow PR once this one's CI run has passed for real (§10). Until that lands, direct commits to its `main` are still possible but no longer the intended path.
 - **Merge method**: both **squash** and **rebase** merges are enabled on both repos; plain merge commits are disabled repo-wide (`allow_merge_commit: false`) — this was an explicit ask, not just the earlier squash-only default. For a single-commit branch (the norm here) they produce an identical result; squash remains the practical default, rebase is there for a branch with multiple commits worth preserving individually. Both auto-delete the branch on merge.
   - **Local-only merging** (`git merge --ff-only` after keeping a branch to one commit) was the Phase 0/1 bridge workaround for landing changes on DailyDo's `main` before real PRs existed — server-side branch protection now makes direct pushes to DailyDo's `main` impossible anyway (PR required), so that workaround is moot there going forward; a real PR is now the only path in. It's still the right pattern for `dev-standards`, which has no protection yet.
   - **Before opening a PR**: run the full local suite (`make check && make test && make build`) and confirm it's green first — don't lean on CI to discover a failure that was catchable for free locally.
@@ -174,12 +174,13 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 - [x] Adopt worktree convention, branch naming, commit convention — enforced, not just documented: `no-commit-to-branch` blocks direct `main` commits, `scripts/check-branch-name.sh` validates `<type>/<slug>`, `scripts/check-commit-msg.sh` validates Conventional Commits. Demonstrated end-to-end in DailyDo via a real worktree → branch → commit → fast-forward-merge cycle.
 - [x] Add DailyDo `Makefile`/`scripts/ci-local.sh` formalizing `DEVELOPMENT_PLAN.md` §7's validation script — `make check`/`test`/`build`, Flutter checks no-op gracefully until the SDK is installed
 - [x] Install subagent definitions (`implementer`, `test-writer`, `debugger`) from `templates/agents/` into DailyDo's `.claude/agents/`
+- [x] Same hooks + a Makefile for `dev-standards` itself — this repo isn't a deployable app, so its `Makefile` validates what it actually has (gitleaks scan + `bash -n` syntax check on every shipped script) rather than reusing the Flutter-flavored `templates/Makefile` verbatim
 
 **Phase 2 — Automated CI**
 - [x] `.github/workflows/ci.yml` added to DailyDo, calling the same Makefile targets — [PR #1](https://github.com/AlonHal/DailyDo/pull/1), squash-merged after CI passed for real (first attempt actually failed: gitleaks wasn't installed on the runner and `protect --staged` doesn't make sense against a clean checkout — both fixed, see §9)
 - [x] Branch protection on DailyDo's `main`: PR required (0 approvals, solo dev), `check` CI run required, no force-push/deletion, `enforce_admins: false` (owner escape hatch, not standing practice)
 - [x] Merge policy on both repos: squash + rebase enabled, plain merge commits disabled, auto-delete branch on merge (explicit ask, not just the earlier default)
-- [ ] Same CI + branch protection for `dev-standards` — not done, no Makefile/checks exist there yet to require
+- [x] Same CI for `dev-standards` (this PR) — branch protection to follow in a fast-follow PR once this one is merged and its CI run has actually passed (same bootstrapping order as DailyDo: protection needs a check to reference before it can require one)
 
 **Phase 3 — Backend bootstrap** (once backend product features are decided — separate effort)
 - [ ] Write `BACKEND_DEVELOPMENT_PLAN.md` using `DEVELOPMENT_PLAN.md`'s phased-plan pattern as the template
@@ -220,4 +221,4 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 
 ---
 
-**Next step**: Phase 3 — backend bootstrap (§10), once backend product features are decided; or retroactively give `dev-standards` its own Phase 1/2.
+**Next step**: enable branch protection on `dev-standards`' `main` once this PR's CI run passes (small fast-follow PR), then Phase 3 — backend bootstrap (§10), once backend product features are decided.
