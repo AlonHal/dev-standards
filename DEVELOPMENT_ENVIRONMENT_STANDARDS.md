@@ -1,6 +1,6 @@
 # Development Environment Standards — SmartphonePracticingApps
 
-Status: planning only — describes the target process and tooling. None of Phase 0 has been executed yet (no repos initialized, no packages installed). Update the checkboxes in §10 as phases complete.
+Status: Phase 0 and Phase 1 complete (both repos initialized, pushed to GitHub, hooks/tooling live in DailyDo). Phase 2 (automated CI) in progress. See §10 for the live checklist.
 
 ## 1. Purpose & Scope
 
@@ -147,12 +147,12 @@ Two DailyDo-specific additions, even though they're really product rules from `D
 | `git`, `gh`, `docker`, `docker compose`, `sqlite3` | Already installed | core VCS + container + DB tooling |
 | `pre-commit` | **Installed** — in an isolated venv (`~/.venvs/dev-tools`), not system-wide/apt, per the user's preference to keep local installs from interfering with anything else on the box | uniform format/lint/secret-scan hooks, driven by the shared template |
 | `gitleaks` | **Installed** — prebuilt binary (v8.30.1) dropped into `~/.venvs/dev-tools/bin`, not apt (avoids needing a Go toolchain the golang-based pre-commit hook variant would otherwise require) | secret scanning, pre-commit + CI |
-
-Both are reached via `~/.venvs/dev-tools/bin` added to `PATH` in `~/.zshrc`. Nothing was installed with `sudo` or touched system Python/apt packages.
 | `flutter`/`dart`, Android SDK, `adb`, emulator image | Missing — this is DailyDo's own outstanding Phase 0 item | DailyDo build/test/analyze |
 | `/dev/kvm` | Missing on this box | blocks the Android emulator until fixed at the host/hypervisor level — carried forward as an unresolved risk, out of scope for this document to fix |
 | `make` | Already present | the "same commands locally and in CI" mechanism — chosen over Just/Task specifically because it needs zero install |
 | Backend language/runtime | **Open decision** (§12) — Node and Python are already on this box; Go is not | don't assume; flagged the same way `DEVELOPMENT_PLAN.md` §9 flags open product decisions |
+
+`pre-commit` and `gitleaks` are both reached via `~/.venvs/dev-tools/bin` added to `PATH` in `~/.zshrc`. Nothing was installed with `sudo` or touched system Python/apt packages.
 
 One-line note: this VM identifies as **Kali Rolling**, not Ubuntu as the earlier environment-setup summary assumed. Kali is Debian-based, so `apt` commands mostly transfer, but package availability/repos can differ — not a blocker, just worth knowing.
 
@@ -215,4 +215,4 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 
 ---
 
-**Next step**: confirm/adjust §12, then Phase 0 can start.
+**Next step**: Phase 2 — automated CI (§10).
