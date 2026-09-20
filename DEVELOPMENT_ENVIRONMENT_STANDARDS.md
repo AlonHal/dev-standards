@@ -1,6 +1,6 @@
 # Development Environment Standards — SmartphonePracticingApps
 
-Status: Phase 0–2 complete for DailyDo. `dev-standards` has hooks/Makefile/CI as of this PR — its branch protection is a fast-follow once this CI run passes. See §10 for the live checklist.
+Status: Phase 0–2 complete for both DailyDo and dev-standards — repos live, hooks/tooling wired, CI running, branch protection on for both. Phase 3 (backend) is next, gated on backend features being decided. See §10 for the live checklist.
 
 ## 1. Purpose & Scope
 
@@ -45,7 +45,7 @@ Each component repo gets its own `CLAUDE.md` (built from `templates/CLAUDE.md.te
 - **AI-authored commit provenance**: every commit produced through a Claude Code session gets a `Co-Authored-By: Claude Code <noreply@anthropic.com>` trailer. This *is* the audit trail (`git log --grep`/`--author`) — no separate event-log system needed. Directly answers app-infra.md's "every AI change has provenance" boundary, at solo scale.
 - **Worktree isolation**: for any non-trivial Claude Code task, work in a dedicated git worktree (`.worktrees/<task-slug>/`, gitignored via the shared template) on a branch named `feat|fix|chore/<task-slug>`. This isolates the agent's working directory from whatever the human has open, and keeps each task's diff independently reviewable. It's the practical, single-agent version of app-infra.md's "isolated worktrees for parallel agents." Trivial one-line changes don't need this — don't ritualize it.
 - **Review (DailyDo — live as of Phase 2)**: `main` is now branch-protected server-side — a PR is required (0 approvals needed, solo dev, no one else to approve), the `check` CI run must pass, and force-pushes/deletions on `main` are blocked. `enforce_admins` is deliberately `false`: the repo owner *can* still bypass in a genuine emergency, but that's an escape hatch, not a standing practice. The flow: push a branch, `gh pr create`, wait for CI, `gh pr merge`. Verified end-to-end on DailyDo PR #1.
-  - **`dev-standards`**: getting the same treatment (this PR) — local hooks, its own `Makefile`, and CI. Branch protection follows in a fast-follow PR once this one's CI run has passed for real (§10). Until that lands, direct commits to its `main` are still possible but no longer the intended path.
+  - **`dev-standards`**: same protection as DailyDo as of this PR — PR required (0 approvals), `check` CI run required, no force-push/deletion, `enforce_admins: false`. This very document now only reaches `main` through the same PR flow it describes.
 - **Merge method**: both **squash** and **rebase** merges are enabled on both repos; plain merge commits are disabled repo-wide (`allow_merge_commit: false`) — this was an explicit ask, not just the earlier squash-only default. For a single-commit branch (the norm here) they produce an identical result; squash remains the practical default, rebase is there for a branch with multiple commits worth preserving individually. Both auto-delete the branch on merge.
   - **Local-only merging** (`git merge --ff-only` after keeping a branch to one commit) was the Phase 0/1 bridge workaround for landing changes on DailyDo's `main` before real PRs existed — server-side branch protection now makes direct pushes to DailyDo's `main` impossible anyway (PR required), so that workaround is moot there going forward; a real PR is now the only path in. It's still the right pattern for `dev-standards`, which has no protection yet.
   - **Before opening a PR**: run the full local suite (`make check && make test && make build`) and confirm it's green first — don't lean on CI to discover a failure that was catchable for free locally.
@@ -180,7 +180,8 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 - [x] `.github/workflows/ci.yml` added to DailyDo, calling the same Makefile targets — [PR #1](https://github.com/AlonHal/DailyDo/pull/1), squash-merged after CI passed for real (first attempt actually failed: gitleaks wasn't installed on the runner and `protect --staged` doesn't make sense against a clean checkout — both fixed, see §9)
 - [x] Branch protection on DailyDo's `main`: PR required (0 approvals, solo dev), `check` CI run required, no force-push/deletion, `enforce_admins: false` (owner escape hatch, not standing practice)
 - [x] Merge policy on both repos: squash + rebase enabled, plain merge commits disabled, auto-delete branch on merge (explicit ask, not just the earlier default)
-- [x] Same CI for `dev-standards` (this PR) — branch protection to follow in a fast-follow PR once this one is merged and its CI run has actually passed (same bootstrapping order as DailyDo: protection needs a check to reference before it can require one)
+- [x] Same CI for `dev-standards` — [PR #1](https://github.com/AlonHal/dev-standards/pull/1), passed on the first attempt (the gitleaks-install and `detect --no-git` fixes from DailyDo's run carried over correctly)
+- [x] Branch protection on `dev-standards`' `main`: same settings as DailyDo (PR required, 0 approvals, `check` required, no force-push/deletion, `enforce_admins: false`)
 
 **Phase 3 — Backend bootstrap** (once backend product features are decided — separate effort)
 - [ ] Write `BACKEND_DEVELOPMENT_PLAN.md` using `DEVELOPMENT_PLAN.md`'s phased-plan pattern as the template
@@ -221,4 +222,4 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 
 ---
 
-**Next step**: enable branch protection on `dev-standards`' `main` once this PR's CI run passes (small fast-follow PR), then Phase 3 — backend bootstrap (§10), once backend product features are decided.
+**Next step**: Phase 3 — backend bootstrap (§10), once backend product features are decided.
