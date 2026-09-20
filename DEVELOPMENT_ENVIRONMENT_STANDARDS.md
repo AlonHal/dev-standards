@@ -6,7 +6,9 @@ Status: planning only — describes the target process and tooling. None of Phas
 
 This document governs **process and tooling** across every component in the SmartphonePracticingApps workspace — DailyDo, the upcoming backend service, and any future app in the family. It complements, rather than replaces, each component's own plan (e.g. `DailyDo/DEVELOPMENT_PLAN.md`, and a future `BACKEND_DEVELOPMENT_PLAN.md`): those documents describe *what* each component does; this one describes *how* anything gets built, tested, and merged, and *what tooling* a fresh dev environment needs.
 
-It exists because of `app-infra.md` — a pasted-in write-up describing a full multi-tenant "AI software delivery platform" (control plane, multi-agent orchestrator, Kubernetes, GitHub App, Temporal, observability stack). That is explicitly **not** the target here. This document adopts the *rigor* app-infra.md describes — real git discipline, CI, layered testing, environment separation, AI-agent safety rules — scaled down to one developer working with Claude Code inside a single VM. §11 lists exactly what was left out and why.
+It exists because of `app-infra.md` (now kept at `reference/app-infra.md` for provenance) — a pasted-in write-up describing a full multi-tenant "AI software delivery platform" (control plane, multi-agent orchestrator, Kubernetes, GitHub App, Temporal, observability stack). That is explicitly **not** the target here. This document adopts the *rigor* app-infra.md describes — real git discipline, CI, layered testing, environment separation, AI-agent safety rules — scaled down to one developer working with Claude Code inside a single VM. §11 lists exactly what was left out and why.
+
+Distilled from it, `templates/app-infra-template.md` is the **per-app companion** to this document: where this file is workspace-wide and applies to every component unchanged, that template gets copied into each new app's own repo and filled in to answer "how does *this specific* app — mobile, web, or both — map onto these shared rules?" (platform target, tech stack, which testing layers actually apply, local dev environment). It sits between this document and an app's own product plan (e.g. `DailyDo/DEVELOPMENT_PLAN.md`, which covers what the app does, not how it's built).
 
 ## 2. Workspace & Repo Strategy
 
@@ -16,12 +18,16 @@ It exists because of `app-infra.md` — a pasted-in write-up describing a full m
 /home/kali/Projects/SmartphonePracticingApps/     # plain directory, not a git repo
 ├── dev-standards/                                  # this repo — rules + shared templates
 │   ├── DEVELOPMENT_ENVIRONMENT_STANDARDS.md
+│   ├── reference/
+│   │   └── app-infra.md                              # original source write-up, kept for provenance
 │   └── templates/
-├── DailyDo/                                        # its own git repo (git init still outstanding)
-│   ├── DEVELOPMENT_PLAN.md
-│   └── app-infra.md
+│       ├── app-infra-template.md                     # per-app infra template, distilled from app-infra.md
+│       ├── agents/                                    # implementer, test-writer, debugger
+│       └── ...                                        # gitignores, pre-commit config, CI workflow, CLAUDE.md
+├── DailyDo/                                        # its own git repo (Phase 0 git init done)
+│   └── DEVELOPMENT_PLAN.md
 ├── backend/                                        # future, own git repo, name TBD
-└── <future-app>/                                   # future, own git repo
+└── <future-app>/                                   # future, own git repo — copies templates/app-infra-template.md in
 ```
 
 **Why multi-repo, not a monorepo:** DailyDo (Flutter/Android, store-released) and the future backend (continuously deployed, language TBD) already have divergent toolchains, dependency managers, and release cadences. A monorepo would need path-filtered CI and workspace tooling (Nx/Turborepo/Bazel-class) to avoid running the whole pipeline on every commit — infrastructure with no current payoff. This mirrors the principle already stated in `DEVELOPMENT_PLAN.md` §8: don't build shared machinery before a second consumer actually needs it.
@@ -155,9 +161,9 @@ One-line note: this VM identifies as **Kali Rolling**, not Ubuntu as the earlier
 Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency across the document family.
 
 **Phase 0 — Workspace foundation**
-- [ ] Create `dev-standards/` repo (`git init` here), commit this document + templates
-- [x] `git init` in `DailyDo/` (branch renamed to `main`), add the Flutter `.gitignore` from `templates/gitignore.flutter` — first commit still outstanding
-- [ ] Decide: relocate `app-infra.md` into `dev-standards/reference/`, or leave in place (§12)
+- [x] Create `dev-standards/` repo (`git init` here), commit this document + templates
+- [x] `git init` in `DailyDo/` (branch renamed to `main`), add the Flutter `.gitignore` from `templates/gitignore.flutter`, first commit
+- [x] Relocate `app-infra.md` into `dev-standards/reference/`; distill it into `templates/app-infra-template.md` (§12)
 - [ ] Decide: GitHub remote wanted? If yes, `gh auth login`, create repos
 
 **Phase 1 — Local process discipline (no CI infra needed yet)**
@@ -203,7 +209,7 @@ Same checkbox/phase-gate style as `DEVELOPMENT_PLAN.md` §6, for consistency acr
 - [ ] Backend language/runtime (Node and Python are already on this box; no framework chosen)
 - [ ] Whether a GitHub (or other) remote is wanted at all, and if so public/private, one account vs. per-project
 - [ ] Backend repo naming (app-specific, e.g. `dailydo-backend`, vs. a family-level name if it's meant to serve multiple future apps)
-- [ ] Whether to relocate `app-infra.md` out of `DailyDo/` into `dev-standards/reference/`, or leave it in place
+- [x] ~~Whether to relocate `app-infra.md` out of `DailyDo/` into `dev-standards/reference/`, or leave it in place~~ — resolved: relocated, and distilled into `templates/app-infra-template.md`
 - [ ] Merge strategy confirmation (squash recommended)
 - [ ] KVM/nested-virtualization fix for the Android emulator — host-level, outside this document's scope, but blocks DailyDo's own Phase 0 regardless
 
